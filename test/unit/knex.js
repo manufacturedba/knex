@@ -5,6 +5,7 @@ const sqliteConfig = require('../knexfile').sqlite3;
 const sqlite3 = require('sqlite3');
 const { noop } = require('lodash');
 const sinon = require('sinon');
+const util = require('util');
 
 describe('knex', () => {
   describe('supports passing existing connection', () => {
@@ -362,6 +363,25 @@ describe('knex', () => {
     expect(() => {
       Knex({ client: ClientFoobar, connection: {} });
     }).to.throw('Knex: run\n$ npm install foo-bar --save\nCannot require...');
+  });
+
+  it('does not modify the password of the original config object', () => {
+    const originalConfig = {
+      client: 'sqlite',
+      connection: {
+        password: 'password',
+      },
+    };
+
+    const knex = Knex(originalConfig);
+
+    expect(util.inspect(originalConfig.connection)).to.contain('password');
+
+    expect(util.inspect(knex.client.config.connection)).to.not.contain(
+      'password'
+    );
+
+    return knex.destroy();
   });
 
   describe('transaction', () => {
