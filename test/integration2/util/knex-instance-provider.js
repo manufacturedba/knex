@@ -201,21 +201,21 @@ const testConfigs = {
   },
 };
 
+function getConfig(db) {
+  return testConfigs[db];
+}
+
 function getKnexForDb(db, configOverrides = {}) {
-  const config = testConfigs[db];
+  const config = getConfig(db);
   return knex({
     ...config,
     ...configOverrides,
   });
 }
 
-function getTestConnectionConfig(db) {
-  return cloneDeep(testConfigs[db].connection || {})
-}
-
 module.exports = {
   Db,
   getAllDbs,
   getKnexForDb,
-  getTestConnectionConfig,
+  getConfig,
 };

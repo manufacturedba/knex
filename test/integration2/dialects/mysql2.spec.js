@@ -1,5 +1,9 @@
 const { expect } = require('chai');
-const { getAllDbs, getKnexForDb, getTestConnectionConfig } = require('../util/knex-instance-provider');
+const {
+  getAllDbs,
+  getKnexForDb,
+  getConfig,
+} = require('../util/knex-instance-provider');
 
 describe('MySQL dialect', () => {
   describe('Connection configuration', () => {
@@ -33,6 +37,26 @@ describe('MySQL dialect', () => {
           } catch (err) {
             expect(err.message).to.eql('connect ECONNREFUSED 127.0.0.1:601');
           }
+        });
+
+        it('should not modify passed config', async () => {
+          const { connection } = getConfig(db);
+
+          const initialInstance = getKnexForDb(db, { connection });
+
+          const subsequentInstance = getKnexForDb(db, {
+            connection: { ...connection },
+          });
+
+          const initialResult = await initialInstance.schema.hasTable('foobar');
+
+          expect(initialResult).to.be.false;
+
+          const subsequentResult = await subsequentInstance.schema.hasTable(
+            'foobar'
+          );
+
+          expect(subsequentResult).to.be.false;
         });
 
         describe(`${db} - connection string with string SSL profile`, () => {
@@ -84,30 +108,5 @@ describe('MySQL dialect', () => {
         });
       });
     });
-
-    dbs.forEach((_db) => {
-      describe('Regressions', () => {
-        it('should not modify passed config', (done) => {
-          const mysql = require('mysql');
-
-          // Config copied from test/integration2/util/knex-instance-provider.js
-          const config = {
-            client: 'mysql2',
-            connection: getTestConnectionConfig('mysql2'),
-          };
-
-          // This is the step that should NOT modify the `config` object
-          const knex = require('../../../lib/index')(config);
-          knex.destroy();
-
-          const connection = mysql.createConnection(config.connection);
-          connection.connect(function (err) {
-            expect(err).to.be.null;
-            connection.end();
-            done()
-          })
-        })
-      })
-    })
   });
 });
