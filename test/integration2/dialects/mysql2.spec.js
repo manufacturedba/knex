@@ -39,7 +39,7 @@ describe('MySQL dialect', () => {
           }
         });
 
-        it('should not modify passed config', async () => {
+        it('should allow reuse of connection config', async () => {
           const { connection } = getConfig(db);
 
           const initialInstance = getKnexForDb(db, { connection });
